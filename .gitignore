@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Management files
+*.cproject
+*.project
+*.settings

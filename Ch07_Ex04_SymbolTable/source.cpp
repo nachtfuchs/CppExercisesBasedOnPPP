@@ -207,9 +207,6 @@ public:
 };
 
 //------------------------------------------------------------------------------
-vector<Variable> varTable;
-
-//------------------------------------------------------------------------------
 /* @brief A class that allows to use variables like 'x', 's' etc. in the
  * 		calculator. Values must (!) be assigned to the variables.
  * 		Allows "const" variables.
@@ -218,23 +215,13 @@ class SymbolTable {
 public:
 	vector<Variable> m_varTable;
 
-	SymbolTable();
+	SymbolTable() {}; // create an empty symbol table
 
 	double get(string s);
 	void set(string s, double d);
 	bool isDeclared(string s);
-	double declare(string s, double v);
+	double declare(string s, double v, bool isConst);
 };
-
-//------------------------------------------------------------------------------
-/* @brief Get the value of a user defined Variable
- * */
-double get_value(string s)
-{
-	for (const Variable& v : varTable)
-		if (v.name == s) return v.value;
-	error("get_value: undefined name ", s);
-}
 
 //------------------------------------------------------------------------------
 /* @brief Get the value of a user defined Variable
@@ -242,27 +229,11 @@ double get_value(string s)
 double SymbolTable::get(string s)
 {
 	for (const Variable& v : m_varTable)
-		if (v.name == s) return v.value;
-	error("get_value: undefined name ", s);
-}
-
-//------------------------------------------------------------------------------
-/* @brief Set the value of a user defined Variable
- * */
-void set_value(string s, double d)
-{
-	for (int i = 0; i < varTable.size(); i++)
 	{
-		if (varTable[i].name == s && varTable[i].isConst == false) {
-			varTable[i].value = d;
-			return;
-		}
-		else if ( varTable[i].name == s && varTable[i].isConst == true )
-		{
-			error("The variable is a 'constant' variable and its value cannot be changed. Variable name: ", s);
-		}
+		cout << "DEBUG SymbolTable::get - v.name: " << v.name << endl;
+		if (v.name == s) return v.value;
 	}
-	error("set_value: undefined name ", s);
+	error("SymbolTable::get: undefined name ", s);
 }
 
 //------------------------------------------------------------------------------
@@ -272,7 +243,10 @@ void SymbolTable::set(string s, double d)
 {
 	for (int i = 0; i < m_varTable.size(); i++)
 	{
-		if (m_varTable[i].name == s && m_varTable[i].isConst == false) {
+		cout << "DEBUG SymbolTable::set - m_varTable[i].name: " << m_varTable[i].name << endl;
+		if (m_varTable[i].name == s && m_varTable[i].isConst == false)
+		{
+			// overwrite existing variables
 			m_varTable[i].value = d;
 			return;
 		}
@@ -287,16 +261,6 @@ void SymbolTable::set(string s, double d)
 //------------------------------------------------------------------------------
 /* @brief Check if the newly added variable already exists in the Variable table
  * */
-bool is_declared(string s)
-{
-	for (const Variable& v : varTable)
-		if (v.name == s) return true;
-	return false;
-}
-
-//------------------------------------------------------------------------------
-/* @brief Check if the newly added variable already exists in the Variable table
- * */
 bool SymbolTable::isDeclared(string s)
 {
 	for (const Variable& v : m_varTable)
@@ -305,36 +269,26 @@ bool SymbolTable::isDeclared(string s)
 }
 
 /* @brief A short function to define quickly a Variable type AND add it to the
- * 		global Variable table "varTable".
+ * 		member table "m_varTable".
  * */
-double define_name(string var, double val)
+double SymbolTable::declare(string var, double val, bool isConst)
 // add (var, val) to var_table
 {
-	if ( is_declared(var) ) set_value(var, val); // overwrite the old value
-	else varTable.push_back( Variable(var, val) );
-	return val;
-}
-
-/* @brief A short function to define quickly a Variable type AND add it to the
- * 		global Variable table "varTable".
- * */
-double SymbolTable::declare(string var, double val)
-// add (var, val) to var_table
-{
+	cout << "DEBUG SymbolTable::declare - var: " << var << endl;
 	if ( isDeclared(var) ) set(var, val); // overwrite the old value
-	else m_varTable.push_back( Variable(var, val) );
+	else m_varTable.push_back( Variable(var, val, isConst) );
 	return val;
 }
 
 Token_stream ts;
 
-double expression();
-double primary();
+double expression( SymbolTable symTable);
+double primary( SymbolTable symTable );
 
 //------------------------------------------------------------------------------
 /* @brief Calculate the result of a keyword function like "sqrt()"
  * */
-double keywordFunction()
+double keywordFunction( SymbolTable symTable )
 {
 	Token t = ts.get(); // Get the token from the buffer!
 	double res {}; 	// The result of the keyword function
@@ -342,7 +296,7 @@ double keywordFunction()
 	double p {};	// the primary value is saved here
 	if (t.name == "sqrt")
 	{
-		d = expression(); // an expression is followed after a keyword function
+		d = expression( symTable ); // an expression is followed after a keyword function
 		if (d > 0) res = sqrt(d);
 		else error("Cannot compute the square root of a negative number: ", d);
 	}
@@ -351,11 +305,11 @@ double keywordFunction()
 		// The user typed in "pow( expression , power )"
 		t = ts.get(); // expecting an '('
 		if (t.kind != '(') error("'(' expected");
-		d = expression(); // an expression is followed after a keyword function name
+		d = expression( symTable ); // an expression is followed after a keyword function name
 		t = ts.get(); // expecting an ','
 		if (t.kind != ',')
 			error("Missing argument separator ',' between two arguments in pow(x, y)");
-		p = narrow_cast<int>( primary() );	// allow only integer number as the
+		p = narrow_cast<int>( primary( symTable ) );	// allow only integer number as the
 											// "power" argument in pow()
 		t = ts.get();
 		if (t.kind != ')') error("')' expected");
@@ -366,29 +320,29 @@ double keywordFunction()
 }
 
 //------------------------------------------------------------------------------
-double primary()
+double primary( SymbolTable symTable )
 {
 	Token t = ts.get();
 	switch (t.kind) {
 	case '(':	// handle '(' expression ')'
 	{
-		double d = expression();
+		double d = expression(symTable);
 		t = ts.get();
 		if (t.kind != ')') error("')' expected");
 		return d;
 	};
 	case '-': // deal with negative numbers
-		return - primary();
+		return - primary(symTable);
 	case number:
 		return t.value;
 	case name:
-		return get_value(t.name);
+		return symTable.get(t.name);
 	case '+':
-		return primary();
+		return primary(symTable);
 	case keyfunc:
 		ts.putback(t); 	// put back the Token information so that the correct
 						// keyword function can be used
-		return keywordFunction();
+		return keywordFunction( symTable );
 		break;
 	default:
 		error("primary expected");
@@ -397,19 +351,19 @@ double primary()
 
 //------------------------------------------------------------------------------
 // deal with *, /, and %
-double term()
+double term( SymbolTable symTable )
 {
-	double left = primary();
+	double left = primary(symTable);
 	Token t = ts.get();        // get the next token from token stream
 	while(true) {	// The while-loop allows multiple terms
 		switch(t.kind) {
 		case '*':
-			left *= primary();
+			left *= primary(symTable);
 			t = ts.get();
 			break;
 		case '/':
 		{
-			double d = primary();
+			double d = primary(symTable);
 			if (d == 0) error("divide by zero");
 			left /= d;
 			t = ts.get();
@@ -417,7 +371,7 @@ double term()
 		}
 		case '%':
 		{
-			double d = primary();
+			double d = primary(symTable);
 			if (d == 0) error("divide by zero (%-operator)");
 			left = fmod(left, d);
 			t = ts.get();
@@ -432,19 +386,19 @@ double term()
 
 //------------------------------------------------------------------------------
 // deal with + and -
-double expression()
+double expression( SymbolTable symTable )
 {
-	double left = term();
+	double left = term(symTable);
 	Token t = ts.get();	// get the next token from token stream
 
 	while(true) {
 		switch(t.kind) {
 		case '+':
-			left += term();
+			left += term(symTable);
 			t = ts.get();
 			break;
 		case '-':
-			left -= term();
+			left -= term(symTable);
 			t = ts.get();
 			break;
 		default:
@@ -462,37 +416,37 @@ double expression()
 *  @input isConst A flag that symbolized whether this variable should be a
 *  				  'constant'
 */
-double declaration(bool isConst = false)
+double declaration(SymbolTable symTable, bool isConst = false)
 {
 	Token t = ts.get();
 	if (t.kind != name) error ("name expected in declaration");
 	string varName = t.name;
 	Token t2 = ts.get();
 	if (t2.kind != '=') error(" '=' missing in declaration of ", varName);
-	double d = expression();
-	if (is_declared(varName))
-		set_value(varName, d); // overwrite old variable value
+	double d = expression( symTable );
+	if (symTable.isDeclared(varName))
+		symTable.set(varName, d); // overwrite old variable value
 	else
-		varTable.push_back( Variable(varName, d, isConst) ); // add new variable
+		symTable.declare( varName, d, isConst ); // add new variable
 	return d;
 }
 
 //------------------------------------------------------------------------------
 /* @brief Handles Declarations and Expressions of the grammar
  * */
-double statement()
+double statement( SymbolTable symTable)
 {
 	Token t = ts.get();
 	switch(t.kind) {
 	case let:
-		return declaration();
+		return declaration( symTable );
 		break;
 	case constVar:
-		return declaration(true);
+		return declaration( symTable, true );
 		break;
 	default:
 		ts.putback(t);
-		return expression();
+		return expression( symTable );
 	}
 }
 
@@ -506,7 +460,7 @@ const string prompt = "> ";
 const string result = "= ";
 
 //------------------------------------------------------------------------------
-void calculate()
+void calculate(SymbolTable symTable)
 {
 	while(cin)
 	try	{
@@ -515,7 +469,12 @@ void calculate()
 		while (t.kind == print) t = ts.get(); // first, discard all prints
 		if (t.kind == quit) return;
 		ts.putback(t);
-		cout << result << statement() << endl;
+		cout << result << statement( symTable ) << endl;
+		cout << "DEBUG calculate() - symTable:" << endl;
+		for ( const Variable& v : symTable.m_varTable) //debug
+		{
+			cout << "DEBUG DEBUG calculate() - symTable - v: " << v.name << endl;
+		}
 	}
 	catch (exception& e) {
 		cerr << e.what() << '\n'; // write error message
@@ -544,11 +503,12 @@ try {
 			print << "'. It will calculate the result." << endl;
 	cout << "If you want to exit the calculator, please type '" << quit << "'." << endl;
 
+	SymbolTable symTable;	// saves all kind of user defined Variables
 	// predefine names:
-	define_name("pi", 3.1415926535);
-	define_name("e", 2.7182818284);
-	define_name("k", 1000);
-	calculate();
+	symTable.declare("pi", 3.1415926535, false);
+	symTable.declare("e", 2.7182818284, false);
+	symTable.declare("k", 1000, false);
+	calculate( symTable );
 	keep_window_open();
 	return 0;
 }

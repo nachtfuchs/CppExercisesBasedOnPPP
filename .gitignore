@@ -37,3 +37,6 @@
 *.settings
 std_lib_facilities.h
 /.metadata/
+
+# projects
+__CppPlayground

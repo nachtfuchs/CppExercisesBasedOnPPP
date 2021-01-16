@@ -7,12 +7,12 @@
  *
  * LESSONS LEARNED:
  * - make use of the qualifiers in function arguments.
- * - If possible, use pass-by-reference.
+ * - If possible, use pass-by-const-reference. This is computationally efficient!
  */
 
 #include "../std_lib_facilities.h"
 
-void print( string label, const vector<int>& inVec)
+void print( const string& label, const vector<int>& inVec)
 {
 	cout << label << endl;
 	for ( int x : inVec ) cout << x << endl;

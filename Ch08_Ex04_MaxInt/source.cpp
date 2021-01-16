@@ -38,7 +38,7 @@ bool fibonacci(int x, int y, vector<int>& v, int n)
 		if ( v[ v.size() - 1 ] < v[ v.size() - 2] )
 		{
 			cout << "WARNING:The fibonacci numbers could not be calculated, because of an 'integer overflow'." << endl;
-			cout << "Last two valid number were: " << v[ v.size() - 3] << ";" << v[ v.size() - 2] << endl;
+			cout << "Last two valid number were: " << v[ v.size() - 3] << "; " << v[ v.size() - 2] << endl;
 			return false;
 		}
 	}

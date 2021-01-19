@@ -11,7 +11,7 @@
 
 #include "../std_lib_facilities.h"
 
-vector<int> reverseVector( vector<int> inVec)
+vector<int> reverseVector( const vector<int>& inVec)
 {
 	vector<int> outVec( inVec.size() );
 	for (int idx = 0; idx < inVec.size(); idx++)

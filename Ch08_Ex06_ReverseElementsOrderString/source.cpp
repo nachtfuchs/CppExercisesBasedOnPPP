@@ -3,11 +3,14 @@
  *
  * ASSIGNMENT:
  * Write versions of the functions from exercise 5, but with a vector<string>.
+ *
+ * LESSON LEARNED:
+ * Use pass-by-const-reference especially if the function uses the argument for reading only.
  */
 
 #include "../std_lib_facilities.h"
 
-vector<string> reverseVector( vector<string> inVec)
+vector<string> reverseVector( const vector<string>& inVec)
 {
 	vector<string> outVec( inVec.size() );
 	for (int idx = 0; idx < inVec.size(); idx++)

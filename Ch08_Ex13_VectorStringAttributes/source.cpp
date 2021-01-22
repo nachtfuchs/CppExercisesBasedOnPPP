@@ -7,6 +7,12 @@
  * find the longest and the shortest string and the lexicographically first and
  * last string. How many separate functions would you use for these tasks?
  * Why?
+ *
+ * LESSONS LEARNED:
+ * - lexicographically is not ASCIIbetically.
+ * - I used one function for each task, because it allows to structure the code
+ *   and make the functions reusable. Also, it makes sense to cluster logical
+ *   units in functions. And I consider each task as a logical unit.
  */
 
 #include "../std_lib_facilities.h"
@@ -77,11 +83,13 @@ string lowerCase( const string& inString )
 	// letter.
 	for ( char c : inString )
 	{
-		if ( c < 'a') // Then it is an upper case letter
+		if ( c < 'a') // Then it is an upper case letter. Alternatively,
+				// "islower( char c )" could be used, but it was not yet
+				// introduced in the book.
 			lString += char( c + diff );
 		else lString += c;
 	}
-	cout << "DEBUG lString: " << lString << endl;
+//	cout << "DEBUG lString: " << lString << endl;
 	return lString;
 }
 /* @brief Return the lexicographically first string in an input vector of strings.

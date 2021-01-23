@@ -13,7 +13,6 @@
  * working on this assignment with the struct-approach.
  *
  * LESSONS LEARNED:
- * - the keyword "this" will make life much easier when dealing with classes in the future
  * - it depends on the context whether the functional- or class-approach should
  * 	 be used. In a small application, a functional approach is faster and
  * 	 easier to read. In a big application, it makes sense to structure code

@@ -41,7 +41,7 @@ int main()
 	Chrono::Date LeapYear400 {2000, Chrono::Month::feb, 29};
 	cout << LeapYear400 << endl;
 
-	LeapYear400.add_day( 366 );
+	LeapYear400.add_day( 366 ); // 366, because the year 2000 has 366 days
 	cout << LeapYear400 << endl;
 
 	Chrono::Date illegalLeapYear {1900, Chrono::Month::feb, 29};

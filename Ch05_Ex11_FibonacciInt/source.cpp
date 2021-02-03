@@ -67,7 +67,6 @@ int main()
 	int N; // the amount of fibonacci numbers that should be calculated.
 	vector<double> intLimits = getIntLimits();
 	double max = intLimits[1]; // the maximum number that fits in an integer
-
 	cout << "This application determines the first N Fibonacci numbers depending on the user input for N." << endl;
 	cout << "Please enter N: ";
 	cin >> N;
